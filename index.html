@@ -3,8 +3,11 @@
     #help { position: fixed; display: block; top: 0; left: 0; padding: 0.2em; background-color: white; }
 </style>
 <body>
+    <div id="help">
+        <span id="info"></span>
+        <select id="world"></select>
+    </div>
     <img id="map">
-    <div id="help"></div>
 </body>
 <script>
     var dates = ["2019-05-03", "2019-07-18", "2019-09-12", "2020-01-07", "2020-02-15"];
@@ -33,26 +36,36 @@
         "Angel I", "Minorengle", "Imdaari", "Alcyon", "Norkyna"
     ];
     var size = 1;
-    var date_index = dates.length - 1;
-    var planet_index = 0;
-    function update_map() {
-        var help = document.getElementById("help");
-        help.innerHTML = "-/0/+ zoom " + (100 * size).toFixed(1) + "% | &#8596; date " 
-            + (date_index + 1) + "/" + dates.length + " | &#8597; world "
-            + (planet_index + 1) + "/" + planets.length + " " + planets[planet_index] + " | " + names[planet_index];
-
+    var date = dates.length - 1;
+    var planet = 0;
+    function update() {
+        var select = document.getElementById("world");
+        select.selectedIndex = planet;
+        var info = document.getElementById("info");
+        info.innerHTML = "-/0/+ zoom " + (100 * size).toFixed(1) + "% | &#8596; date " + (date + 1) + "/" + dates.length + " | &#8597; ";
         var map = document.getElementById("map");
-        map.src = dates[date_index] + "/" + planets[planet_index];
+        map.src = dates[date] + "/" + planets[planet];
         map.style.height = (4068 * size) + "px";
     }
+    function setup() {
+        select = document.getElementById('world');
+        select.addEventListener("change", function() {
+            planet = select.selectedIndex;
+            update();
+        });
+        for (var i = 0; i < names.length; i++) {
+            var option = document.createElement('option');
+            option.innerHTML = (i + 1) + ": " + names[i];
+            select.appendChild(option);
+        }
+    }
     document.addEventListener("keydown", function(event) {
-        console.log(event);
         if (["+", "-", "0", "ArrowUp", "ArrowDown", "ArrowRight", "ArrowLeft"].includes(event.key)) {
             switch (event.key) {
-                case "ArrowLeft": date_index -= 1; break;
-                case "ArrowRight": date_index += 1; break;
-                case "ArrowUp": planet_index += 1; break;
-                case "ArrowDown": planet_index -=1; break;
+                case "ArrowLeft": date -= 1; break;
+                case "ArrowRight": date += 1; break;
+                case "ArrowUp": planet += 1; break;
+                case "ArrowDown": planet -=1; break;
                 case "0": size = 1; break;
                 case "+": size *= 1.2; break;
                 case "-": size *= 0.8; break;
@@ -60,10 +73,11 @@
             event.preventDefault();
         }
         size = Math.max(0.02, Math.min(5, size));
-        date_index = Math.max(0, Math.min(dates.length - 1, date_index));
-        planet_index = Math.max(0, Math.min(planets.length - 1, planet_index));
-        update_map();
+        date = Math.max(0, Math.min(dates.length - 1, date));
+        planet = Math.max(0, Math.min(planets.length - 1, planet));
+        update();
     });
-    update_map();
+    setup();
+    update();
 </script>
 </html>
