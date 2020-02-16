@@ -1,0 +1,68 @@
+<html>
+<style>
+    #help { position: fixed; display: block; bottom: 0; left: 0; padding: 0.2em; background-color: white; }
+</style>
+<body>
+    <img id="map">
+    <div id="help"></div>
+</body>
+<script>
+    var dates = ["2019-05-03", "2019-07-18", "2019-09-12", "2020-01-07", "2020-02-15"];
+    var planets = [
+        "aus1_t0_0.png", "aus1_t1_0.png", "aus1_t2_0.png", "aus2_t4_0.png", "aus2_t5_0.png",
+        "aus2_t5_1.png", "euc1_t0_0.png", "euc1_t1_0.png", "euc1_t2_0.png", "euc1_t3_0.png",
+        "euc1_t4_0.png", "euc2_t0_0.png", "euc2_t0_1.png", "euc2_t1_0.png", "euc2_t2_0.png",
+        "euc2_t5_0.png", "euc3_t0_0.png", "euc3_t0_1.png", "euc3_t0_2.png", "euc4_t1_0.png",
+        "euc4_t2_0.png", "euc4_t5_0.png", "euc5_t0_0.png", "euc5_t1_0.png", "use1_t0_0.png",
+        "use1_t1_0.png", "use1_t2_0.png", "use1_t3_0.png", "use1_t4_0.png", "use2_t0_0.png",
+        "use2_t0_1.png", "use2_t1_0.png", "use2_t2_0.png", "use2_t5_0.png", "use3_t0_0.png",
+        "use3_t0_1.png", "use3_t0_2.png", "use4_t1_0.png", "use4_t2_0.png", "use4_t5_0.png",
+        "usw1_t0_0.png", "usw1_t1_0.png", "usw1_t2_0.png", "usw1_t3_0.png", "usw1_t4_0.png",
+        "usw2_t0_0.png", "usw2_t1_0.png", "usw2_t2_0.png", "usw2_t5_0.png", "usw2_t5_1.png"
+    ];
+    var names = [
+        "Lasaina", "Lutrion", "Boori", "Flan", "Galan",
+        "Malurialakrib", "Sochaltin I", "Finata", "Lamblis", "Circarpous I",
+        "Besevrona", "Arie", "Refgar", "Antar VI", "Gloviathosa",
+        "Cardass", "Niia Zed Ka", "Imoco", "Gellis", "Eresho",
+        "Xa Frant", "Kol Huroo", "Dzassak", "Trung", "Beckon",
+        "Pheminorum", "Biitula", "Delta Cancret", "Serpensarindi", "Maryx",
+        "Trior", "Kada I", "Cephonex Merika", "Shedu Tier", "Alder",
+        "Sorissi", "Raxxa", "Tana VII", "Gyosha Ophin", "Houchus I",
+        "Storis II", "Seginiakai", "Grovidias Te", "Till", "Alnitans",
+        "Angel I", "Minorengle", "Imdaari", "Alcyon", "Norkyna"
+    ];
+    var size = 1;
+    var date_index = 0;
+    var planet_index = 0;
+    function update_map() {
+        var help = document.getElementById("help");
+        help.innerHTML = "-/0/+ zoom " + (100 * size).toFixed(1) + "% | &#8596; date " 
+            + (date_index + 1) + "/" + dates.length + " | &#8597; world "
+            + (planet_index + 1) + "/" + planets.length + " " + planets[planet_index] + " " + names[planet_index];
+
+        var map = document.getElementById("map");
+        map.src = dates[date_index] + "/" + planets[planet_index];
+        map.style.height = (4068 * size) + "px";
+    }
+    document.addEventListener("keydown", function(event) {
+        if ([37, 38, 39, 40, 48, 61, 173].includes(event.keyCode)) {
+            switch (event.keyCode) {
+                case 37: date_index -= 1; break;
+                case 39: date_index += 1; break;
+                case 38: planet_index += 1; break;
+                case 40: planet_index -=1; break;
+                case 48: size = 1; break;
+                case 61: size *= 1.2; break;
+                case 173: size *= 0.8; break;
+            }
+            event.preventDefault();
+        }
+        size = Math.max(0.02, Math.min(5, size));
+        date_index = Math.max(0, Math.min(dates.length - 1, date_index));
+        planet_index = Math.max(0, Math.min(planets.length - 1, planet_index));
+        update_map();
+    });
+    update_map();
+</script>
+</html>
