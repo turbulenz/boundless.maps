@@ -39,7 +39,7 @@
         var help = document.getElementById("help");
         help.innerHTML = "-/0/+ zoom " + (100 * size).toFixed(1) + "% | &#8596; date " 
             + (date_index + 1) + "/" + dates.length + " | &#8597; world "
-            + (planet_index + 1) + "/" + planets.length + " " + planets[planet_index] + " " + names[planet_index];
+            + (planet_index + 1) + "/" + planets.length + " " + planets[planet_index] + " | " + names[planet_index];
 
         var map = document.getElementById("map");
         map.src = dates[date_index] + "/" + planets[planet_index];
