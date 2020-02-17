@@ -1,7 +1,7 @@
 <html>
 <style>
     #help { position: fixed; display: block; top: 0; left: 0; padding: 0.2em; background-color: white; }
-    #plots { width: 576px; height: 576px; }
+    #plots { width: 4608px; height: 4608px; }
 </style>
 <body>
     <div id="help">
@@ -10,8 +10,7 @@
         <span>&nbsp;&#8597;&nbsp;<select id="world"></select></span>
         <span id="beacons"></span>
     </div>
-    <canvas id="plots" width="576" height="576"></canvas>
-    <img id="map">
+    <canvas id="plots" width="4608" height="4608"></canvas>
 </body>
 <script>
     var dates = ["2019-05-03", "2019-07-18", "2019-09-12", "2020-01-07", "2020-02-15"];
@@ -46,42 +45,37 @@
     var world_select = document.getElementById("world");
     var date_select = document.getElementById("date");
     var zoom_span = document.getElementById("zoom");
-    var map_img = document.getElementById("map");
     var beacons_span = document.getElementById("beacons")
     var canvas = document.getElementById("plots");
+    var map = new Image();
     var ctx = canvas.getContext("2d");
 
     async function getJSON(path, callback) {
         return callback(await fetch(path).then(r => r.json()));
     }
-
-    function getRandomInt(min, max) {
-      min = Math.ceil(min);
-      max = Math.floor(max);
-      return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
-    }
-
     function update_beacons(planet_index) {
         _update = function (_plant_index) {
+            ctx.globalAlpha = 1;
+            ctx.drawImage(map, 0, 0, 4608, 4608);
+            ctx.globalAlpha = 0.7;
+
+            var uncompact_count = 0;
             var beacon_stats = stats[planet_index];
-            beacons_span.innerHTML = Object.keys(beacon_stats).length + " Beacons";
-
-            var clear = "rgb(255,255,255)";
-            var compact = "rgb(200,200,200)";
-            var uncompact = "rgb(100,255,100)";
-        
-            ctx.fillStyle = clear;
-            ctx.fillRect(0, 0, 576, 576);
-
             Object.values(beacon_stats).forEach(beacon => {
                 var plots = beacon["columns"];
-                ctx.fillStyle = (beacon["displayCompactness"] < 0) ? uncompact : compact;
+                if (beacon["displayCompactness"] < 0) {
+                    ctx.fillStyle = "orange";
+                    uncompact_count += 1;
+                } else {
+                    ctx.fillStyle = "navy";
+                }
                 for (var i = 0; i < plots.length; i += 2) {
-                    var y = plots[i];
-                    var x = plots[i+1];
-                    ctx.fillRect(x, y, 1, 1);
+                    var y = plots[i] * 8;
+                    var x = plots[i+1] * 8;
+                    ctx.fillRect(x, y, 8, 8);
                 }
             });
+            beacons_span.innerHTML = + uncompact_count + "/" + Object.keys(beacon_stats).length + " uncompact";
         }
         if (!(stats.hasOwnProperty(planet_index))) {
             getJSON("beaconstats/" + planets[planet] + ".json", function (data) {
@@ -96,9 +90,12 @@
         world_select.selectedIndex = planet;
         date_select.selectedIndex = date;
         zoom_span.innerHTML = "-/0/+ zoom " + (100 * size).toFixed(1) + "%";
-        map_img.src = dates[date] + "/" + planets[planet]  + ".png";
-        map_img.style.height = (4608 * size) + "px";
-        update_beacons(planet)
+        canvas.style.width = canvas.style.height = (size * 4608) + "px";
+
+        map.addEventListener('load', function() {
+            update_beacons(planet)
+        }, false);
+        map.src = dates[date] + "/" + planets[planet]  + ".png";
     }
     function setup() {
         document.addEventListener("keydown", function(event) {
