@@ -4,8 +4,9 @@
 </style>
 <body>
     <div id="help">
-        <span id="info"></span>
-        <select id="world"></select>
+        <span id="zoom"></span>
+        <span>&nbsp;&#8596;&nbsp;<select id="date"></select></span>
+        <span>&nbsp;&#8597;&nbsp;<select id="world"></select></span>
     </div>
     <img id="map">
 </body>
@@ -38,45 +39,56 @@
     var size = 1;
     var date = dates.length - 1;
     var planet = 0;
+    var world_select = document.getElementById("world");
+    var date_select = document.getElementById("date");
+    var zoom_span = document.getElementById("zoom");
+    var map_img = document.getElementById("map");
+
     function update() {
-        var select = document.getElementById("world");
-        select.selectedIndex = planet;
-        var info = document.getElementById("info");
-        info.innerHTML = "-/0/+ zoom " + (100 * size).toFixed(1) + "% | &#8596; date " + (date + 1) + "/" + dates.length + " | &#8597; ";
-        var map = document.getElementById("map");
-        map.src = dates[date] + "/" + planets[planet];
-        map.style.height = (4068 * size) + "px";
+        world_select.selectedIndex = planet;
+        date_select.selectedIndex = date;
+        zoom_span.innerHTML = "-/0/+ zoom " + (100 * size).toFixed(1) + "%";
+        map_img.src = dates[date] + "/" + planets[planet];
+        map_img.style.height = (4068 * size) + "px";
     }
     function setup() {
-        select = document.getElementById('world');
-        select.addEventListener("change", function() {
-            planet = select.selectedIndex;
+        document.addEventListener("keydown", function(event) {
+            if (["+", "-", "0", "ArrowUp", "ArrowDown", "ArrowRight", "ArrowLeft"].includes(event.key)) {
+                switch (event.key) {
+                    case "ArrowLeft": date -= 1; break;
+                    case "ArrowRight": date += 1; break;
+                    case "ArrowUp": planet += 1; break;
+                    case "ArrowDown": planet -=1; break;
+                    case "0": size = 1; break;
+                    case "+": size *= 1.2; break;
+                    case "-": size *= 0.8; break;
+                }
+                event.preventDefault();
+            }
+            size = Math.max(0.02, Math.min(5, size));
+            date = Math.max(0, Math.min(dates.length - 1, date));
+            planet = Math.max(0, Math.min(planets.length - 1, planet));
+            update();
+        });
+        world_select.addEventListener("change", function() {
+            planet = world_select.selectedIndex;
+            update();
+        });
+        date_select.addEventListener("change", function() {
+            date = date_select.selectedIndex;
             update();
         });
         for (var i = 0; i < names.length; i++) {
             var option = document.createElement('option');
             option.innerHTML = (i + 1) + ": " + names[i];
-            select.appendChild(option);
+            world_select.appendChild(option);
+        }
+        for (var i = 0; i < dates.length; i++) {
+            var option = document.createElement('option');
+            option.innerHTML = dates[i];
+            date_select.appendChild(option);
         }
     }
-    document.addEventListener("keydown", function(event) {
-        if (["+", "-", "0", "ArrowUp", "ArrowDown", "ArrowRight", "ArrowLeft"].includes(event.key)) {
-            switch (event.key) {
-                case "ArrowLeft": date -= 1; break;
-                case "ArrowRight": date += 1; break;
-                case "ArrowUp": planet += 1; break;
-                case "ArrowDown": planet -=1; break;
-                case "0": size = 1; break;
-                case "+": size *= 1.2; break;
-                case "-": size *= 0.8; break;
-            }
-            event.preventDefault();
-        }
-        size = Math.max(0.02, Math.min(5, size));
-        date = Math.max(0, Math.min(dates.length - 1, date));
-        planet = Math.max(0, Math.min(planets.length - 1, planet));
-        update();
-    });
     setup();
     update();
 </script>
