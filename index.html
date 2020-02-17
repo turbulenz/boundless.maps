@@ -1,28 +1,31 @@
 <html>
 <style>
     #help { position: fixed; display: block; top: 0; left: 0; padding: 0.2em; background-color: white; }
+    #plots { width: 576px; height: 576px; }
 </style>
 <body>
     <div id="help">
         <span id="zoom"></span>
         <span>&nbsp;&#8596;&nbsp;<select id="date"></select></span>
         <span>&nbsp;&#8597;&nbsp;<select id="world"></select></span>
+        <span id="beacons"></span>
     </div>
+    <canvas id="plots" width="576" height="576"></canvas>
     <img id="map">
 </body>
 <script>
     var dates = ["2019-05-03", "2019-07-18", "2019-09-12", "2020-01-07", "2020-02-15"];
     var planets = [
-        "aus1_t0_0.png", "aus1_t1_0.png", "aus1_t2_0.png", "aus2_t4_0.png", "aus2_t5_0.png",
-        "aus2_t5_1.png", "euc1_t0_0.png", "euc1_t1_0.png", "euc1_t2_0.png", "euc1_t3_0.png",
-        "euc1_t4_0.png", "euc2_t0_0.png", "euc2_t0_1.png", "euc2_t1_0.png", "euc2_t2_0.png",
-        "euc2_t5_0.png", "euc3_t0_0.png", "euc3_t0_1.png", "euc3_t0_2.png", "euc4_t1_0.png",
-        "euc4_t2_0.png", "euc4_t5_0.png", "euc5_t0_0.png", "euc5_t1_0.png", "use1_t0_0.png",
-        "use1_t1_0.png", "use1_t2_0.png", "use1_t3_0.png", "use1_t4_0.png", "use2_t0_0.png",
-        "use2_t0_1.png", "use2_t1_0.png", "use2_t2_0.png", "use2_t5_0.png", "use3_t0_0.png",
-        "use3_t0_1.png", "use3_t0_2.png", "use4_t1_0.png", "use4_t2_0.png", "use4_t5_0.png",
-        "usw1_t0_0.png", "usw1_t1_0.png", "usw1_t2_0.png", "usw1_t3_0.png", "usw1_t4_0.png",
-        "usw2_t0_0.png", "usw2_t1_0.png", "usw2_t2_0.png", "usw2_t5_0.png", "usw2_t5_1.png"
+        "aus1_t0_0", "aus1_t1_0", "aus1_t2_0", "aus2_t4_0", "aus2_t5_0",
+        "aus2_t5_1", "euc1_t0_0", "euc1_t1_0", "euc1_t2_0", "euc1_t3_0",
+        "euc1_t4_0", "euc2_t0_0", "euc2_t0_1", "euc2_t1_0", "euc2_t2_0",
+        "euc2_t5_0", "euc3_t0_0", "euc3_t0_1", "euc3_t0_2", "euc4_t1_0",
+        "euc4_t2_0", "euc4_t5_0", "euc5_t0_0", "euc5_t1_0", "use1_t0_0",
+        "use1_t1_0", "use1_t2_0", "use1_t3_0", "use1_t4_0", "use2_t0_0",
+        "use2_t0_1", "use2_t1_0", "use2_t2_0", "use2_t5_0", "use3_t0_0",
+        "use3_t0_1", "use3_t0_2", "use4_t1_0", "use4_t2_0", "use4_t5_0",
+        "usw1_t0_0", "usw1_t1_0", "usw1_t2_0", "usw1_t3_0", "usw1_t4_0",
+        "usw2_t0_0", "usw2_t1_0", "usw2_t2_0", "usw2_t5_0", "usw2_t5_1"
     ];
     var names = [
         "Lasaina", "Lutrion", "Boori", "Flan", "Galan",
@@ -36,6 +39,7 @@
         "Storis II", "Seginiakai", "Grovidias Te", "Till", "Alnitans",
         "Angel I", "Minorengle", "Imdaari", "Alcyon", "Norkyna"
     ];
+    var stats = { };
     var size = 1;
     var date = dates.length - 1;
     var planet = 0;
@@ -43,13 +47,58 @@
     var date_select = document.getElementById("date");
     var zoom_span = document.getElementById("zoom");
     var map_img = document.getElementById("map");
+    var beacons_span = document.getElementById("beacons")
+    var canvas = document.getElementById("plots");
+    var ctx = canvas.getContext("2d");
 
+    async function getJSON(path, callback) {
+        return callback(await fetch(path).then(r => r.json()));
+    }
+
+    function getRandomInt(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+    }
+
+    function update_beacons(planet_index) {
+        _update = function (_plant_index) {
+            var beacon_stats = stats[planet_index];
+            beacons_span.innerHTML = Object.keys(beacon_stats).length + " Beacons";
+
+            var clear = "rgb(255,255,255)";
+            var compact = "rgb(200,200,200)";
+            var uncompact = "rgb(100,255,100)";
+        
+            ctx.fillStyle = clear;
+            ctx.fillRect(0, 0, 576, 576);
+
+            Object.values(beacon_stats).forEach(beacon => {
+                var plots = beacon["columns"];
+                ctx.fillStyle = (beacon["displayCompactness"] < 0) ? uncompact : compact;
+                for (var i = 0; i < plots.length; i += 2) {
+                    var y = plots[i];
+                    var x = plots[i+1];
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            });
+        }
+        if (!(stats.hasOwnProperty(planet_index))) {
+            getJSON("beaconstats/" + planets[planet] + ".json", function (data) {
+                stats[planet_index] = data;
+                _update(planet_index);
+            });
+        } else {
+            _update(planet_index);
+        }
+    }
     function update() {
         world_select.selectedIndex = planet;
         date_select.selectedIndex = date;
         zoom_span.innerHTML = "-/0/+ zoom " + (100 * size).toFixed(1) + "%";
-        map_img.src = dates[date] + "/" + planets[planet];
-        map_img.style.height = (4068 * size) + "px";
+        map_img.src = dates[date] + "/" + planets[planet]  + ".png";
+        map_img.style.height = (4608 * size) + "px";
+        update_beacons(planet)
     }
     function setup() {
         document.addEventListener("keydown", function(event) {
@@ -64,11 +113,11 @@
                     case "-": size *= 0.8; break;
                 }
                 event.preventDefault();
+                size = Math.max(0.02, Math.min(5, size));
+                date = Math.max(0, Math.min(dates.length - 1, date));
+                planet = Math.max(0, Math.min(planets.length - 1, planet));
+                update();
             }
-            size = Math.max(0.02, Math.min(5, size));
-            date = Math.max(0, Math.min(dates.length - 1, date));
-            planet = Math.max(0, Math.min(planets.length - 1, planet));
-            update();
         });
         world_select.addEventListener("change", function() {
             planet = world_select.selectedIndex;
@@ -79,12 +128,12 @@
             update();
         });
         for (var i = 0; i < names.length; i++) {
-            var option = document.createElement('option');
-            option.innerHTML = (i + 1) + ": " + names[i];
+            var option = document.createElement("option");
+            option.innerHTML = (i + 1) + ": " + names[i] + " [" + planets[i] + "]";
             world_select.appendChild(option);
         }
         for (var i = 0; i < dates.length; i++) {
-            var option = document.createElement('option');
+            var option = document.createElement("option");
             option.innerHTML = dates[i];
             date_select.appendChild(option);
         }
