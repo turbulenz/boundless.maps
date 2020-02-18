@@ -1,6 +1,8 @@
 <html>
 <style>
-    #help { position: fixed; display: block; top: 0; left: 0; padding: 0.2em; background-color: white; }
+    div { position: fixed; display: block; top: 0; padding: 0.2em; background-color: white;  }
+    div #help { left: 0; }
+    div#loading { right: 0; }
     #plots { width: 4608px; height: 4608px; }
 </style>
 <body>
@@ -10,6 +12,7 @@
         <span id="zoom"></span>
         <span id="beacons"></span>
     </div>
+    <div id="loading">Loading</div>
     <canvas id="plots" width="4608" height="4608"></canvas>
 </body>
 <script>
@@ -41,10 +44,12 @@
     var stats = new Map();
     var maps = new Map();
     var zoom, date, planet, compactness;
+    var show_beacons = true;
     var world_select = document.getElementById("world");
     var date_select = document.getElementById("date");
     var zoom_span = document.getElementById("zoom");
     var beacons_span = document.getElementById("beacons")
+    var loading_div = document.getElementById("loading")
     var canvas = document.getElementById("plots");
     var ctx = canvas.getContext("2d");
 
@@ -59,23 +64,27 @@
         _update_beacons = function () {
             var uncompact_count = 0;
             var beacon_stats = stats.get(m);
-            Object.values(beacon_stats).forEach(beacon => {
-                var plots = beacon["columns"];
-                if (beacon["compactness"] < c) {
-                    ctx.fillStyle = "orange";
-                    uncompact_count += 1;
-                } else {
-                    ctx.fillStyle = "navy";
-                }
-                for (var i = 0; i < plots.length; i += 2) {
-                    var y = plots[i] * 8;
-                    var x = plots[i+1] * 8;
-                    ctx.fillRect(x, y, 8, 8);
-                }
-            });
+            if (show_beacons) {
+                Object.values(beacon_stats).forEach(beacon => {
+                    var plots = beacon["columns"];
+                    if (beacon["compactness"] < c) {
+                        ctx.fillStyle = "orange";
+                        uncompact_count += 1;
+                    } else {
+                        ctx.fillStyle = "navy";
+                    }
+                    for (var i = 0; i < plots.length; i += 2) {
+                        var y = plots[i] * 8;
+                        var x = plots[i+1] * 8;
+                        ctx.fillRect(x, y, 8, 8);
+                    }
+                });
+            }
             beacons_span.innerHTML = "threshold <> " + c.toFixed(2) + " &middot; beacons "+ uncompact_count + "/" + Object.keys(beacon_stats).length;
+            loading_div.style.display = "none";
         }
         if (!stats.has(m)) {
+            loading_div.style.display = "";
             getJSON("beaconstats/" + planets[m] + ".json", function (data) {
                 stats.set(m, data);
                 _update_beacons();
@@ -89,6 +98,7 @@
         date = d = date_select.selectedIndex = Math.max(0, Math.min(dates.length - 1, d));
         planet = m = world_select.selectedIndex = Math.max(0, Math.min(planets.length - 1, m));
         if (!maps.has([d,m])) {
+            loading_div.style.display = "";
             var map = new Image();
             map.addEventListener("load", function () {
                 update_beacons(m, map, c)
@@ -106,7 +116,7 @@
     }
     function setup() {
         document.addEventListener("keydown", function KeyDownListener(event) {
-            if (["+", "=", "-", "0", "<", ",", ">", ".", "ArrowUp", "ArrowDown", "ArrowRight", "ArrowLeft"].includes(event.key)) {
+            if (["b", "+", "=", "-", "0", "<", ",", ">", ".", "ArrowUp", "ArrowDown", "ArrowRight", "ArrowLeft"].includes(event.key)) {
                 switch (event.key) {
                     case "ArrowLeft": update_map(date - 1, planet, compactness); break;
                     case "ArrowRight": update_map(date + 1, planet, compactness); break;
@@ -114,6 +124,7 @@
                     case "ArrowDown": update_map(date, planet - 1, compactness); break;
                     case ",": case "<": update_map(date, planet, compactness - 0.01); break;
                     case ".": case ">": update_map(date, planet, compactness + 0.01); break;
+                    case "b": show_beacons = !show_beacons; update_map(date, planet, compactness); break;
                     case "0": update_zoom(1); update_map(date, planet, 0.25); break;
                     case "=": case "+": update_zoom(zoom * 1.2); break;
                     case "-": update_zoom(zoom * 0.8); break;
