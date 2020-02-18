@@ -38,29 +38,27 @@
         "Storis II", "Seginiakai", "Grovidias Te", "Till", "Alnitans",
         "Angel I", "Minorengle", "Imdaari", "Alcyon", "Norkyna"
     ];
-    var stats = { };
-    var size = 1;
-    var date = dates.length - 1;
-    var planet = 0;
+    var stats = new Map();
+    var maps = new Map();
+    var zoom, date, planet;
     var world_select = document.getElementById("world");
     var date_select = document.getElementById("date");
     var zoom_span = document.getElementById("zoom");
     var beacons_span = document.getElementById("beacons")
     var canvas = document.getElementById("plots");
-    var map = new Image();
     var ctx = canvas.getContext("2d");
 
     async function getJSON(path, callback) {
         return callback(await fetch(path).then(r => r.json()));
     }
-    function update_beacons(planet_index) {
-        _update = function (_plant_index) {
-            ctx.globalAlpha = 1;
-            ctx.drawImage(map, 0, 0, 4608, 4608);
-            ctx.globalAlpha = 0.7;
+    function update_beacons(m, map) {
+        ctx.globalAlpha = 1;
+        ctx.drawImage(map, 0, 0, 4608, 4608);
+        ctx.globalAlpha = 0.7;
 
+        _update_beacons = function () {
             var uncompact_count = 0;
-            var beacon_stats = stats[planet_index];
+            var beacon_stats = stats.get(m);
             Object.values(beacon_stats).forEach(beacon => {
                 var plots = beacon["columns"];
                 if (beacon["displayCompactness"] < 0) {
@@ -77,52 +75,54 @@
             });
             beacons_span.innerHTML = + uncompact_count + "/" + Object.keys(beacon_stats).length + " uncompact";
         }
-        if (!(stats.hasOwnProperty(planet_index))) {
-            getJSON("beaconstats/" + planets[planet] + ".json", function (data) {
-                stats[planet_index] = data;
-                _update(planet_index);
+        if (!stats.has(m)) {
+            getJSON("beaconstats/" + planets[m] + ".json", function (data) {
+                stats.set(m, data);
+                _update_beacons();
             });
         } else {
-            _update(planet_index);
+            _update_beacons();
         }
     }
-    function update() {
-        world_select.selectedIndex = planet;
-        date_select.selectedIndex = date;
-        zoom_span.innerHTML = "-/0/+ zoom " + (100 * size).toFixed(1) + "%";
-        canvas.style.width = canvas.style.height = (size * 4608) + "px";
-
-        map.addEventListener('load', function() {
-            update_beacons(planet)
-        }, false);
-        map.src = dates[date] + "/" + planets[planet]  + ".png";
+    function update_map(d, m) {
+        date = d = date_select.selectedIndex = Math.max(0, Math.min(dates.length - 1, d));
+        planet = m = world_select.selectedIndex = Math.max(0, Math.min(planets.length - 1, m));
+        if (!maps.has([d,m])) {
+            var map = new Image();
+            map.addEventListener("load", function () {
+                update_beacons(m, map)
+            }, false);
+            map.src = dates[d] + "/" + planets[m]  + ".png";
+            maps.set([d, m], map);
+        } else {
+            update_beacons(m, map);
+        }
+    }
+    function update_zoom(z) {
+        zoom = Math.max(0.02, Math.min(5, z));
+        zoom_span.innerHTML = "-/0/+ zoom " + (100 * zoom).toFixed(1) + "%";
+        canvas.style.width = canvas.style.height = (zoom * 4608) + "px";
     }
     function setup() {
-        document.addEventListener("keydown", function(event) {
+        document.addEventListener("keydown", function KeyDownListener(event) {
             if (["+", "-", "0", "ArrowUp", "ArrowDown", "ArrowRight", "ArrowLeft"].includes(event.key)) {
                 switch (event.key) {
-                    case "ArrowLeft": date -= 1; break;
-                    case "ArrowRight": date += 1; break;
-                    case "ArrowUp": planet += 1; break;
-                    case "ArrowDown": planet -=1; break;
-                    case "0": size = 1; break;
-                    case "+": size *= 1.2; break;
-                    case "-": size *= 0.8; break;
+                    case "ArrowLeft": update_map(date - 1, planet); break;
+                    case "ArrowRight": update_map(date + 1, planet); break;
+                    case "ArrowUp": update_map(date, planet + 1); break;
+                    case "ArrowDown": update_map(date, planet - 1); break;
+                    case "0": update_zoom(1); break;
+                    case "+": update_zoom(zoom * 1.2); break;
+                    case "-": update_zoom(zoom * 0.8); break;
                 }
                 event.preventDefault();
-                size = Math.max(0.02, Math.min(5, size));
-                date = Math.max(0, Math.min(dates.length - 1, date));
-                planet = Math.max(0, Math.min(planets.length - 1, planet));
-                update();
             }
         });
-        world_select.addEventListener("change", function() {
-            planet = world_select.selectedIndex;
-            update();
+        world_select.addEventListener("change", function () {
+            update_map(world_select.selectedIndex, date_select.selectedIndex);
         });
-        date_select.addEventListener("change", function() {
-            date = date_select.selectedIndex;
-            update();
+        date_select.addEventListener("change", function () {
+            update_map(world_select.selectedIndex, date_select.selectedIndex);
         });
         for (var i = 0; i < names.length; i++) {
             var option = document.createElement("option");
@@ -136,6 +136,7 @@
         }
     }
     setup();
-    update();
+    update_zoom(1);
+    update_map(dates.length - 1, 0)
 </script>
 </html>
