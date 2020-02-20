@@ -45,7 +45,7 @@
     var stats = new Map();
     var maps = new Map();
     var zoom, date, planet, compactness;
-    var compactness_index = 0;
+    var compactness_index = 1;
     var show_beacons = true;
     var world_select = document.getElementById("world");
     var date_select = document.getElementById("date");
@@ -55,6 +55,9 @@
     var canvas = document.getElementById("plots");
     var ctx = canvas.getContext("2d");
 
+    function clamp(v, lower, upper) {
+        return Math.max(lower, Math.min(upper, v));
+    }
     async function getJSON(path, callback) {
         return callback(await fetch(path).then(r => r.json()));
     }
@@ -112,9 +115,6 @@
         m = m || 0;
         c = c || [0.25, 0.45];
 
-        var clamp = function(v, lower, upper) {
-            return Math.max(lower, Math.min(upper, v));
-        }
         compactness = c = [clamp(c[0], 0, 1.0), clamp(c[1], 0, 1.0)];
         date = d = date_select.selectedIndex = clamp(d, 0, dates.length - 1);
         planet = m = world_select.selectedIndex = clamp(m, 0, planets.length - 1);
@@ -132,7 +132,8 @@
         }
     }
     function update_zoom(z) {
-        zoom = Math.max(0.02, Math.min(50, z));
+        z = z || 1;
+        zoom = clamp(z, 0.02, 50);
         zoom_span.innerHTML = "reset 0 &middot; zoom -+ " + (100 * zoom).toFixed(1) + "%";
         canvas.style.width = canvas.style.height = (zoom * 4608) + "px";
     }
@@ -148,7 +149,7 @@
                     case ".": case ">": compactness[compactness_index] += 0.01; update_map(date, planet, compactness); break;
                     case "c": compactness_index = (compactness_index + 1) % 2; update_map(date, planet, compactness); break;
                     case "b": show_beacons = !show_beacons; update_map(date, planet, compactness); break;
-                    case "0": update_zoom(1); update_map(date, planet); break;
+                    case "0": update_zoom(); update_map(date, planet); break;
                     case "=": case "+": update_zoom(zoom * 1.2); break;
                     case "-": update_zoom(zoom * 0.8); break;
                 }
@@ -173,7 +174,7 @@
         }
     }
     setup();
-    update_zoom(1);
+    update_zoom();
     update_map()
 </script>
 </html>
