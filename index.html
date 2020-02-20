@@ -3,7 +3,8 @@
     div { position: fixed; display: block; top: 0; padding: 0.2em; background-color: white;  }
     div #help { left: 0; }
     div#loading { right: 0; }
-    #plots { width: 4608px; height: 4608px; }
+    #plots { width: 4608px; height: 4608px; image-rendering: crisp-edges; }
+    body { margin: 0; }
 </style>
 <body>
     <div id="help">
@@ -112,7 +113,7 @@
         }
     }
     function update_zoom(z) {
-        zoom = Math.max(0.02, Math.min(5, z));
+        zoom = Math.max(0.02, Math.min(50, z));
         zoom_span.innerHTML = "reset 0 &middot; zoom -+ " + (100 * zoom).toFixed(1) + "%";
         canvas.style.width = canvas.style.height = (zoom * 4608) + "px";
     }
