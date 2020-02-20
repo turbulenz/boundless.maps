@@ -83,10 +83,15 @@
                         ctx.fillRect(x, y, 8, 8);
                     }
                 });
+                var selected = function(label, i, c) {
+                    return ((i === compactness_index) ? "&lt;&gt; " : " ") + label + "=" + c;
+                }
                 beacons_span.innerHTML =
-                    "&middot; thresholds <> " + c[0].toFixed(2) + "::" + c[1].toFixed(2) +
-                    " &middot; index c " + compactness_index +
-                    " &middot; compact b "+ uncompact_count + "/" + Object.keys(beacon_stats).length;
+                    " &middot; beacons b" +
+                    " &middot; thresholds c" +
+                    " &middot; " + selected("reservations", 0, c[0].toFixed(2)) +
+                    " &middot; " + selected("faces", 1, c[1].toFixed(2)) +
+                    " &middot; uncompact " + uncompact_count + "/" + Object.keys(beacon_stats).length;
             } else {
                 beacons_span.innerHTML = "";
             }
