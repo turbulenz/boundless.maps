@@ -19,11 +19,11 @@ for f in args.stats:
             if column and column.get("plots", 0):
                 # Add column to beacon
                 beacon_id = column.get("beacon")
-                assert(beacon_id)
+                assert beacon_id
                 b = beacons.get(beacon_id)
-                beacon_columns = b.get("columns", [ ])
+                beacon_columns = b.get("columns", [])
                 beacon_columns.extend([r, c])
                 b["columns"] = beacon_columns
 
     with open(output_name, "w") as g:
-        json_dump(beacons, g, separators=(',', ':'))
+        json_dump(beacons, g, separators=(",", ":"))
