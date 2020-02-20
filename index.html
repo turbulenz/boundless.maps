@@ -103,12 +103,17 @@
         }
     }
     function update_map(d, m, c) {
+        d = d || dates.length - 1;
+        m = m || 0;
+        c = c || [0.25, 0.45];
+
         var clamp = function(v, lower, upper) {
             return Math.max(lower, Math.min(upper, v));
         }
         compactness = c = [clamp(c[0], 0, 1.0), clamp(c[1], 0, 1.0)];
         date = d = date_select.selectedIndex = clamp(d, 0, dates.length - 1);
         planet = m = world_select.selectedIndex = clamp(m, 0, planets.length - 1);
+
         if (!maps.has([d,m])) {
             loading_div.style.display = "";
             var map = new Image();
@@ -138,7 +143,7 @@
                     case ".": case ">": compactness[compactness_index] += 0.01; update_map(date, planet, compactness); break;
                     case "c": compactness_index = (compactness_index + 1) % 2; update_map(date, planet, compactness); break;
                     case "b": show_beacons = !show_beacons; update_map(date, planet, compactness); break;
-                    case "0": update_zoom(1); update_map(date, planet, [0.25, 0.25]); break;
+                    case "0": update_zoom(1); update_map(date, planet); break;
                     case "=": case "+": update_zoom(zoom * 1.2); break;
                     case "-": update_zoom(zoom * 0.8); break;
                 }
@@ -164,6 +169,6 @@
     }
     setup();
     update_zoom(1);
-    update_map(dates.length - 1, 0, [0.25, 0.25])
+    update_map()
 </script>
 </html>
