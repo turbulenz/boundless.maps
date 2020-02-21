@@ -13,18 +13,15 @@ for image in args.images:
     if len(args.images) > 1:
         print(f"# {image} -> {basename}")
 
-    for z in [0, 1, 2]:
-        try:
-            os_makedirs(f"{basename}/{z}")
-        except FileExistsError:
-            pass
+    for z, resize in enumerate([144, 288, 576, 1152, 2304, 4608]):
+        for y in range(resize // 144):
+            try:
+                path = f"{basename}/{z}/{y}"
+                print(f"# Creating: {path}")
+                os_makedirs(path)
+            except FileExistsError:
+                pass
 
-    subprocess_run(
-        args=f"convert {image} -resize 4608x4608 -crop 128x128 -set filename:f {basename}_X%[fx:page.x/128]_Y%[fx:page.y/128]_Z2 {basename}/2/%[filename:f].png".split()
-    )
-    subprocess_run(
-        args=f"convert {image} -resize 2304x2304 -crop 128x128 -set filename:f {basename}_X%[fx:page.x/128]_Y%[fx:page.y/128]_Z1 {basename}/1/%[filename:f].png".split()
-    )
-    subprocess_run(
-        args=f"convert {image} -resize 1152x1152 -crop 128x128 -set filename:f {basename}_X%[fx:page.x/128]_Y%[fx:page.y/128]_Z0 {basename}/0/%[filename:f].png".split()
-    )
+        subprocess_run(
+            args=f"convert {image} -resize {resize}x{resize} -crop 144x144 -set filename:f {basename}/z{z}/y%[fx:page.y/144]/x%[fx:page.x/144] %[filename:f].png".split()
+        )
