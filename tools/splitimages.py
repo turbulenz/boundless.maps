@@ -23,5 +23,5 @@ for image in args.images:
                 pass
 
         subprocess_run(
-            args=f"convert {image} -resize {resize}x{resize} -crop 144x144 -set filename:f {basename}/z{z}/y%[fx:page.y/144]/x%[fx:page.x/144] %[filename:f].png".split()
+            args=f"convert {image} -resize {resize}x{resize} -crop 144x144 -set filename:f {basename}/{z}/%[fx:page.y/144]/%[fx:page.x/144] %[filename:f].png".split()
         )
