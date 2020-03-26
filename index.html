@@ -17,7 +17,7 @@
     <canvas id="plots" width="4608" height="4608"></canvas>
 </body>
 <script>
-    var dates = ["2019-05-03", "2019-07-18", "2019-09-12", "2020-01-07", "2020-02-15"];
+    var dates = ["2019-05-03", "2019-07-18", "2019-09-12", "2020-01-07", "2020-02-15", "2020-03-25"];
     var planets = [
         "aus1_t0_0", "aus1_t1_0", "aus1_t2_0", "aus2_t4_0", "aus2_t5_0",
         "aus2_t5_1", "euc1_t0_0", "euc1_t1_0", "euc1_t2_0", "euc1_t3_0",
@@ -59,16 +59,23 @@
         return Math.max(lower, Math.min(upper, v));
     }
     async function getJSON(path, callback) {
-        return callback(await fetch(path).then(r => r.json()));
+        return callback(await fetch(path).then(r => {
+            if (r.ok) {
+                return r.json();
+            }
+            else {
+                return { };
+            }
+        }));
     }
-    function update_beacons(m, map, c) {
+    function update_beacons(statsUrl, map, c) {
         ctx.globalAlpha = 1;
         ctx.drawImage(map, 0, 0, 4608, 4608);
         ctx.globalAlpha = 0.7;
 
         _update_beacons = function () {
             var uncompact_count = 0;
-            var beacon_stats = stats.get(m);
+            var beacon_stats = stats.get(statsUrl);
             if (show_beacons) {
                 compactness_key = ["compactness", "faceCompactness"][compactness_index];
                 compactness_value = c[compactness_index];
@@ -100,10 +107,10 @@
             }
             loading_div.style.display = "none";
         }
-        if (!stats.has(m)) {
+        if (!stats.has(statsUrl)) {
             loading_div.style.display = "";
-            getJSON("beaconstats/" + planets[m] + ".json", function (data) {
-                stats.set(m, data);
+            getJSON(statsUrl, function (data) {
+                stats.set(statsUrl, data);
                 _update_beacons();
             });
         } else {
@@ -119,16 +126,17 @@
         date = d = date_select.selectedIndex = clamp(d, 0, dates.length - 1);
         planet = m = world_select.selectedIndex = clamp(m, 0, planets.length - 1);
 
+        var statsUrl = "beaconstats/" + dates[d] + "/" + planets[m] + ".json";
         if (!maps.has([d,m])) {
             loading_div.style.display = "";
             var map = new Image();
             map.addEventListener("load", function () {
-                update_beacons(m, map, c)
+                update_beacons(statsUrl, map, c)
             }, false);
             map.src = dates[d] + "/" + planets[m]  + ".png";
             maps.set([d, m], map);
         } else {
-            update_beacons(m, map, c);
+            update_beacons(statsUrl, map, c);
         }
     }
     function update_zoom(z) {
